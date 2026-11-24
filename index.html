@@ -1,0 +1,263 @@
+```html
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Para a minha princesinha</title>
+<style>
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    background: #050407;
+    color: white;
+    font-family: monospace;
+    overflow-x: hidden;
+}
+
+h1 {
+    text-align: center;
+    color: #b52b65;
+    font: normal clamp(24px, 5vw, 42px) Georgia, serif;
+    margin: 35px 8px 10px;
+    text-shadow: 0 0 18px #d12d75;
+    position: relative;
+    z-index: 2;
+}
+
+.subtitle {
+    text-align: center;
+    color: #d78aa9;
+    letter-spacing: 3px;
+    font-size: 11px;
+    margin-bottom: 30px;
+    position: relative;
+    z-index: 2;
+}
+
+#bouquet {
+    width: 100%;
+    overflow-x: auto;
+    text-align: center;
+    position: relative;
+    z-index: 2;
+    padding-bottom: 35px;
+}
+
+pre {
+    display: inline-block;
+    text-align: left;
+    white-space: pre;
+    font-size: clamp(6px, 1.15vw, 12px);
+    line-height: 1.05;
+    font-weight: bold;
+    margin: 0;
+}
+
+.red { color: #f33d69; text-shadow: 0 0 5px #c51b50; }
+.pink { color: #ff83b4; text-shadow: 0 0 5px #e74d91; }
+.light { color: #ffc1dc; }
+.green { color: #48a86b; }
+.darkgreen { color: #246541; }
+.gold { color: #ffd477; }
+.paper { color: #d68cac; }
+
+.floating {
+    position: fixed;
+    bottom: -40px;
+    z-index: 1;
+    pointer-events: none;
+    animation: rise linear forwards;
+    text-shadow: 0 0 12px currentColor;
+}
+
+@keyframes rise {
+    0% { transform: translateY(0) rotate(0); opacity: 0; }
+    10% { opacity: .9; }
+    90% { opacity: .7; }
+    100% { transform: translateY(-110vh) rotate(35deg); opacity: 0; }
+}
+</style>
+</head>
+<body>
+
+<h1>para voce minha princesinha ♡</h1>
+<div class="subtitle">feito especialmente para ti</div>
+
+<div id="bouquet">
+<pre id="art"></pre>
+</div>
+
+<script>
+const W = 91;
+const H = 57;
+const grid = Array.from({length:H}, () => Array(W).fill(" "));
+const colors = Array.from({length:H}, () => Array(W).fill(""));
+
+const flowerChars = "0OQ@#%&8B$*+X";
+const pinkChars = "AaEeOoQq@#%&*";
+const lightChars = "oO0*+xX%$";
+
+function put(x,y,ch,color) {
+    if (x>=0 && x<W && y>=0 && y<H) {
+        grid[y][x] = ch;
+        colors[y][x] = color;
+    }
+}
+
+function flower(cx,cy,rx,ry,color,chars,seed) {
+    for(let y=cy-ry-2;y<=cy+ry+2;y++) {
+        for(let x=cx-rx-2;x<=cx+rx+2;x++) {
+            const dx=(x-cx)/rx;
+            const dy=(y-cy)/ry;
+            const angle=Math.atan2(dy,dx);
+            const radius=Math.sqrt(dx*dx+dy*dy);
+            const petalShape = 0.73 + 0.23*Math.cos(8*angle);
+            if(radius < petalShape) {
+                const n=(x*7+y*13+seed*19)%chars.length;
+                const ch=chars[Math.abs(n)];
+                const inner=radius<0.24;
+                put(x,y,inner ? "@" : ch,inner ? "gold" : color);
+            }
+        }
+    }
+
+    // centro com textura
+    for(let y=cy-2;y<=cy+2;y++) {
+        for(let x=cx-3;x<=cx+3;x++) {
+            if((x-cx)**2+(y-cy)**2<=8) {
+                put(x,y, "0O@*#"[Math.abs((x*3+y*5)%5)],"gold");
+            }
+        }
+    }
+}
+
+function stem(x1,y1,x2,y2) {
+    const steps=Math.max(Math.abs(x2-x1),Math.abs(y2-y1));
+    for(let i=0;i<=steps;i++) {
+        const t=i/steps;
+        const x=Math.round(x1+(x2-x1)*t);
+        const y=Math.round(y1+(y2-y1)*t);
+        put(x,y,"|","green");
+        if(i%4===0) put(x+1,y,"1","darkgreen");
+    }
+}
+
+function leaf(x,y,dir) {
+    const chars="<>/\\~^v";
+    for(let i=0;i<7;i++) {
+        for(let j=-2;j<=2;j++) {
+            if(Math.abs(j)<=2-i/4) {
+                put(x+dir*i,y+j,chars[(i+j+12)%chars.length],
+                    i%2 ? "green" : "darkgreen");
+            }
+        }
+    }
+}
+
+// Caules
+const flowers = [
+    [45,5,8,5,"red",flowerChars],
+    [29,11,7,5,"pink",pinkChars],
+    [62,11,7,5,"red",flowerChars],
+    [16,20,7,5,"light",lightChars],
+    [75,20,7,5,"pink",pinkChars],
+    [37,24,7,5,"red",flowerChars],
+    [54,24,7,5,"pink",pinkChars],
+    [25,29,6,4,"pink",pinkChars],
+    [67,29,6,4,"red",flowerChars],
+    [45,17,7,5,"light",lightChars],
+    [8,29,5,4,"red",flowerChars],
+    [83,29,5,4,"pink",pinkChars]
+];
+
+flowers.forEach(([x,y,rx,ry,c,ch],i) => {
+    stem(x,y+ry,x+((45-x)*0.15),49);
+});
+
+flowers.forEach(([x,y,rx,ry,c,ch],i) => {
+    flower(x,y,rx,ry,c,ch,i+1);
+});
+
+// Folhas
+[
+    [34,37,1],[55,39,-1],[28,42,1],[64,43,-1],
+    [39,45,1],[50,46,-1],[20,40,1],[70,40,-1],
+    [44,34,-1],[48,36,1]
+].forEach(([x,y,d])=>leaf(x,y,d));
+
+// Pequenas flores de preenchimento
+for(let i=0;i<24;i++) {
+    const x=12+(i*17)%68;
+    const y=25+(i*11)%13;
+    const ch="*+x0@";
+    put(x,y,ch[i%ch.length],i%2?"pink":"light");
+}
+
+// Embrulho
+for(let y=46;y<56;y++) {
+    const width=9+(y-46)*2;
+    for(let x=45-width;x<=45+width;x++) {
+        if(Math.abs(x-45) > width-2) {
+            put(x,y,"/","paper");
+        } else if((x+y)%3===0) {
+            put(x,y,"#","paper");
+        } else if((x+y)%4===0) {
+            put(x,y,"*","light");
+        }
+    }
+}
+
+// Laço
+[
+    [38,47,"<"],[39,47,"<"],[40,48,"<"],
+    [52,47,">"],[51,47,">"],[50,48,">"],
+    [44,48,"@"],[45,48,"#"],[46,48,"@"],
+    [43,49,"/"],[47,49,"\\"]
+].forEach(([x,y,ch])=>put(x,y,ch,"pink"));
+
+// Textura extra nas flores
+for(let y=0;y<H;y++) {
+    for(let x=0;x<W;x++) {
+        if(grid[y][x]!==" " && !colors[y][x]) {
+            colors[y][x]="pink";
+        }
+    }
+}
+
+// Renderização colorida
+const output=grid.map((row,y)=>{
+    let result="";
+    for(let x=0;x<W;x++) {
+        const ch=row[x];
+        if(ch===" ") result+=" ";
+        else result+=`<span class="${colors[y][x]}">${ch}</span>`;
+    }
+    return result;
+}).join("\n");
+
+document.getElementById("art").innerHTML=output;
+
+// Fundo animado
+const symbols=["♡","♥","<3","ღ","*","✧","LOVE","143","xoxo","A+M"];
+const bgColors=["#ff83b4","#f33d69","#ffc1dc","#d68cac"];
+
+function floatSymbol() {
+    const el=document.createElement("div");
+    el.className="floating";
+    el.textContent=symbols[Math.floor(Math.random()*symbols.length)];
+    el.style.left=Math.random()*100+"vw";
+    el.style.color=bgColors[Math.floor(Math.random()*bgColors.length)];
+    el.style.fontSize=(12+Math.random()*18)+"px";
+    el.style.animationDuration=(8+Math.random()*9)+"s";
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(),18000);
+}
+
+setInterval(floatSymbol,450);
+</script>
+</body>
+</html>
+```
